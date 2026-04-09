@@ -246,7 +246,7 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7;}
 <!-- LA PUPUCE -->
 <div class="page" id="page-lapupuce">
   <div class="page-title">La Pupuce ♠</div>
-  <div class="page-sub">Classement général — % de chance de perdre = (défaites / parties) × 100. Minimum 10 parties pour être classé.</div>
+  <div class="page-sub">Classement général — % de chance de perdre = (défaites / parties) × 100. Minimum 5 parties pour être classé.</div>
   <div class="ranking-wrap" id="rankingPupuce"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
   <div style="margin-top:16px;" id="unclassifiedPupuce"></div>
 </div>
@@ -564,18 +564,18 @@ function rankNum(i) {
 
 async function loadPupuce() {
   const joueurs = await loadJoueurs();
-  const classes = joueurs.filter(j => j.parties_jouees >= 10).sort((a,b) => getPct(b) - getPct(a));
-  const nonclasses = joueurs.filter(j => j.parties_jouees < 10);
+  const classes = joueurs.filter(j => j.parties_jouees >= 5).sort((a,b) => getPct(b) - getPct(a));
+  const nonclasses = joueurs.filter(j => j.parties_jouees < 5);
   const rows = classes.map((j, i) => `<div class="rank-row" onclick="goProfile('${j.id}')">
     ${rankNum(i)}${makeAvatar(j)}
     <div class="rank-info"><div class="rank-name">${j.prenom} ${j.nom}${i===0?'<span class="badge-crown">LA PUPUCE</span>':''}</div><div class="rank-alias">${j.alias}</div></div>
     <div class="rank-val"><strong>${getPct(j).toFixed(1)}%</strong><small>% de chance de perdre</small></div>
   </div>`).join('');
   document.getElementById('rankingPupuce').innerHTML = classes.length
-    ? `<div class="ranking-head"><span style="font-size:20px;color:var(--gold);">♠</span><div><div class="ranking-head-title">Classement général</div><div class="ranking-head-sub">(défaites / parties) × 100 — min. 10 parties</div></div></div>${rows}`
-    : '<div class="loading">Aucun joueur classé (10 parties minimum).</div>';
+    ? `<div class="ranking-head"><span style="font-size:20px;color:var(--gold);">♠</span><div><div class="ranking-head-title">Classement général</div><div class="ranking-head-sub">(défaites / parties) × 100 — min. 5 parties</div></div></div>${rows}`
+    : '<div class="loading">Aucun joueur classé (5 parties minimum).</div>';
   if (nonclasses.length) {
-    document.getElementById('unclassifiedPupuce').innerHTML = `<div class="unclassified-note">⏳ Non classés (moins de 10 parties) : ${nonclasses.map(j=>j.prenom).join(', ')}</div>`;
+    document.getElementById('unclassifiedPupuce').innerHTML = `<div class="unclassified-note">⏳ Non classés (moins de 5 parties) : ${nonclasses.map(j=>j.prenom).join(', ')}</div>`;
   }
 }
 
@@ -630,7 +630,7 @@ async function loadJoueursPage() {
         <div>
           <div style="font-size:15px;font-family:var(--font-display);">${j.prenom} ${j.nom}</div>
           <div style="font-size:12px;color:var(--gold);margin-top:1px;">${j.alias}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px;">${j.parties_jouees} partie${j.parties_jouees!==1?'s':''} · ${j.parties_perdues} défaite${j.parties_perdues!==1?'s':''} · <span style="color:${getPct(j)>=50?'#E05567':'var(--green-light)'};">${j.parties_jouees>=10?getPct(j).toFixed(1)+'%':'non classé'}</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">${j.parties_jouees} partie${j.parties_jouees!==1?'s':''} · ${j.parties_perdues} défaite${j.parties_perdues!==1?'s':''} · <span style="color:${getPct(j)>=50?'#E05567':'var(--green-light)'};">${j.parties_jouees>=5?getPct(j).toFixed(1)+'%':'non classé'}</span></div>
         </div>
       </div>
     </div>`).join('');
@@ -654,7 +654,7 @@ async function goProfile(id) {
   const { data: parties } = await sb.from('parties').select('*').contains('joueurs_ids', [id]).order('date', {ascending:false});
   const pct = getPct(j);
   const pctClass = pct >= 50 ? 'red-text' : 'green-text';
-  const classement = j.parties_jouees >= 10 ? '#' + (joueurs.filter(x=>x.parties_jouees>=10).sort((a,b)=>getPct(b)-getPct(a)).findIndex(x=>x.id===id)+1) : 'N/C';
+  const classement = j.parties_jouees >= 5 ? '#' + (joueurs.filter(x=>x.parties_jouees>=5).sort((a,b)=>getPct(b)-getPct(a)).findIndex(x=>x.id===id)+1) : 'N/C';
 
   function buildHistRow(p) {
     const joueurNames = (p.joueurs_ids||[]).filter(x=>x!==id).map(xid=>{const jj=joueurs.find(jx=>jx.id===xid);return jj?jj.prenom:'?';}).join(', ');
@@ -682,7 +682,7 @@ async function goProfile(id) {
     <div class="profile-stats">
       <div class="pstat"><div class="n">${j.parties_jouees}</div><div class="l">Parties</div></div>
       <div class="pstat"><div class="n">${j.parties_perdues}</div><div class="l">Défaites</div></div>
-      <div class="pstat"><div class="n ${pctClass}">${j.parties_jouees>=10?pct.toFixed(1)+'%':'—'}</div><div class="l">% de perdre</div></div>
+      <div class="pstat"><div class="n ${pctClass}">${j.parties_jouees>=5?pct.toFixed(1)+'%':'—'}</div><div class="l">% de perdre</div></div>
       <div class="pstat"><div class="n gold-text">${classement}</div><div class="l">Classement</div></div>
     </div>
     <div class="section-label" style="margin-bottom:12px;">5 dernières parties</div>
@@ -748,13 +748,9 @@ async function saveEditProfil() {
 
   let photo_url = undefined;
   if (editSelectedPhoto) {
-    const ext = editSelectedPhoto.name.split('.').pop();
-    const filename = `${alias.replace('@','')}_${Date.now()}.${ext}`;
-    const { error: upErr } = await sb.storage.from('photos').upload(filename, editSelectedPhoto, {contentType: editSelectedPhoto.type});
-    if (!upErr) {
-      const { data: urlData } = sb.storage.from('photos').getPublicUrl(filename);
-      photo_url = urlData.publicUrl;
-    }
+    const uploaded = await uploadPhoto(editSelectedPhoto, alias);
+    if (!uploaded) { btn.disabled=false; btn.textContent='Sauvegarder'; return; }
+    photo_url = uploaded;
   }
 
   const updates = {prenom, nom, alias, replique: replique||null, parties_jouees: parties, parties_perdues: defaites};
@@ -830,6 +826,7 @@ async function validerPartie() {
 function handlePhotoSelect(input) {
   const file = input.files[0];
   if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Photo trop lourde (max 5 Mo).', 'error'); return; }
   selectedPhoto = file;
   const reader = new FileReader();
   reader.onload = e => {
@@ -839,6 +836,33 @@ function handlePhotoSelect(input) {
   };
   reader.readAsDataURL(file);
 }
+
+async function uploadPhoto(file, alias) {
+  const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+  const safeName = alias.replace(/[^a-zA-Z0-9]/g,'').toLowerCase();
+  const filename = `${safeName}_${Date.now()}.${ext}`;
+  console.log('Tentative upload:', filename, 'taille:', file.size, 'type:', file.type);
+
+  const { data: upData, error: upErr } = await sb.storage
+    .from('photo')
+    .upload(filename, file, {
+      contentType: file.type || 'image/jpeg',
+      cacheControl: '3600',
+      upsert: false
+    });
+
+  if (upErr) {
+    console.error('Erreur upload Supabase:', upErr);
+    toast('Erreur upload photo : ' + upErr.message + ' — vérifiez que le bucket est Public.', 'error');
+    return null;
+  }
+
+  console.log('Upload réussi:', upData);
+  const { data: urlData } = sb.storage.from('photo').getPublicUrl(filename);
+  console.log('URL publique:', urlData.publicUrl);
+  return urlData.publicUrl;
+}
+
 async function inscrireJoueur() {
   const prenom = document.getElementById('reg-prenom').value.trim();
   const nom = document.getElementById('reg-nom').value.trim();
@@ -850,20 +874,20 @@ async function inscrireJoueur() {
 
   let photo_url = null;
   if (selectedPhoto) {
-    const ext = selectedPhoto.name.split('.').pop();
-    const filename = `${alias.replace('@','')}_${Date.now()}.${ext}`;
-    const { error: upErr } = await sb.storage.from('photos').upload(filename, selectedPhoto, {contentType: selectedPhoto.type});
-    if (!upErr) {
-      const { data: urlData } = sb.storage.from('photos').getPublicUrl(filename);
-      photo_url = urlData.publicUrl;
-    } else {
-      console.error('Upload photo error:', upErr);
+    btn.textContent = 'Upload photo...';
+    photo_url = await uploadPhoto(selectedPhoto, alias);
+    if (!photo_url) {
+      btn.disabled = false; btn.textContent = "M'inscrire";
+      return;
     }
+    btn.textContent = 'Inscription...';
   }
 
+  console.log('Insertion joueur avec photo_url:', photo_url);
   const { error } = await sb.from('joueurs').insert({prenom, nom, alias, replique: replique||null, photo_url});
   if (error) {
-    toast(error.message.includes('unique') ? 'Cet alias est déjà pris.' : 'Erreur lors de l\'inscription.', 'error');
+    console.error('Erreur insertion joueur:', error);
+    toast(error.message.includes('unique') ? 'Cet alias est déjà pris.' : 'Erreur : ' + error.message, 'error');
     btn.disabled=false; btn.textContent="M'inscrire"; return;
   }
   toast('Inscription réussie ! Bienvenue ' + prenom + ' !');
