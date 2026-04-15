@@ -583,7 +583,7 @@ function openScoresModal(partieId) {
     const col = score >= 500 ? '#E05567' : score < 0 ? 'var(--green-light)' : 'var(--text)';
     const loserMark = isLoser ? (p.double_defaite ? ' ×2 ♠' : ' ♠') : '';
     return `<div class="score-detail-row">
-      <div class="score-detail-name">${alias}${isLoser ? ' <span style="font-size:10px;color:#E05567;">(perdant${p.double_defaite?' ×2':''})</span>' : ''}</div>
+      <div class="score-detail-name">${alias}${isLoser ? ` <span style="font-size:10px;color:#E05567;">(perdant${p.double_defaite ? ' ×2' : ''})</span>` : ''}</div>
       <div class="score-detail-val" style="color:${col};">${score}${loserMark}</div>
     </div>`;
   }).join('');
